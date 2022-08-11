@@ -20,7 +20,7 @@ module.exports = gql`
     type Comment {
         _id: ID
         userId: ID
-        description: String
+        body: String
         createdAt: String
     }
 
@@ -58,11 +58,11 @@ module.exports = gql`
     type Mutation {
         createUser(name: String!, password: String!, position: String!): User
 
-        createProject(id: ID!, title: String!, members: [ID]!): Project!
+        createProject(userId: ID!, title: String!): Project!
         editProject(id: ID!, title: String): Project!
-        addMember(projectId: ID!, userId: ID!, role: String!): Project!
+        addMember(projectId: ID!, userId: ID!, role: Int!): Project!
         removeMember(projectId: ID!, userId: ID!): Project!
-        joinProject(projectId: ID!, userId: ID!, code: String!): Project!
+        joinProject(userId: ID!, code: String!): Project!
         commentProject(projectId: ID!, body: String!, userId: ID!): Comment!
         deleteCommentProject(
             projectId: ID!

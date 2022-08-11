@@ -1,5 +1,9 @@
-const ProjectModel = require('../../models/project')
+const ProjectModel = require('../../model/project.model')
 
+interface Roles {
+    userId: string
+    role: number
+}
 module.exports = {
     Query: {
         async getProjects() {
@@ -20,17 +24,13 @@ module.exports = {
     Mutation: {
         async createProject(
             _: null,
-            {
-                id,
-                title,
-                members,
-            }: { id: string; title: string; members: string[] }
+            { userId, title }: { userId: string; title: string }
         ) {
             try {
                 const project = new ProjectModel({
-                    createdBy: id,
+                    createdBy: userId,
                     title,
-                    members,
+                    createdAt: new Date().toISOString(),
                 })
                 await project.save()
                 return project
@@ -55,10 +55,15 @@ module.exports = {
 
         async addMember(
             _: null,
-            { id, userId, role }: { id: string; userId: string; role: string }
+            {
+                projectId,
+                userId,
+                role,
+            }: { projectId: string; userId: string; role: string }
         ) {
             try {
-                const project = await ProjectModel.findById(id)
+                const project = await ProjectModel.findById(projectId)
+                console.log(project)
                 if (
                     project.members.find((member) => member.userId === userId)
                 ) {
@@ -77,6 +82,7 @@ module.exports = {
             { projectId, userId }: { projectId: string; userId: string }
         ) {
             try {
+                //allow if you're a admin - make a helper function to check if user is admin
                 const project = await ProjectModel.findById(projectId)
                 const member = project.members.find(
                     (member) => member.userId === userId
@@ -98,7 +104,8 @@ module.exports = {
             { userId, code }: { userId: string; code: string }
         ) {
             try {
-                const project = await ProjectModel.find({ code })
+                const project = await ProjectModel.findOne({ code: code })
+                if (!project) throw new Error('Project not found')
                 if (
                     project.members.find((member) => member.userId === userId)
                 ) {
@@ -122,6 +129,7 @@ module.exports = {
         ) {
             try {
                 const project = await ProjectModel.findById(projectId)
+                console.log(body)
                 if (project) {
                     project.comments.push({
                         userId,
@@ -129,7 +137,7 @@ module.exports = {
                         createdAt: new Date().toISOString(),
                     })
                     await project.save()
-                    return project
+                    return project.comments[project.comments.length - 1]
                 } else {
                     throw new Error('Project not found')
                 }
@@ -140,10 +148,11 @@ module.exports = {
 
         async deleteProject(
             _: null,
-            { id, userId }: { id: string; userId: string }
+            { projectId, userId }: { projectId: string; userId: string }
         ) {
+            //make a helper function to check if user owns something
             try {
-                const project = await ProjectModel.findById(id)
+                const project = await ProjectModel.findById(projectId)
                 if (project.createdBy === userId) {
                     await project.remove()
                     return true

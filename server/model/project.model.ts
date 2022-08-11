@@ -20,7 +20,7 @@ const Project = new Schema({
     members: { type: [{ userId: String, role: Number }], default: [] },
     ticketIds: { type: [String], default: [] },
     comments: {
-        type: [{ userId: String, description: String, createdAt: String }],
+        type: [{ userId: String, body: String, createdAt: String }],
         default: [],
     },
     createdAt: { type: String, required: true },
