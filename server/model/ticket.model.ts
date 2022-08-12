@@ -9,6 +9,8 @@ const Ticket = new Schema({
         default: [],
     },
     handlers: { type: [String], default: [] },
+    title: { type: String, required: true },
+    createdBy: { type: String, required: true },
     status: { type: String, required: true },
     priority: { type: String, required: true },
     createdAt: { type: String, required: true },
