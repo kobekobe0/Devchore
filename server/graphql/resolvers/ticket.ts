@@ -1,6 +1,6 @@
 export {}
-const TicketModel = require('../../models/ticket')
-const ProjectModel = require('../../models/project')
+const TicketModel = require('../../model/ticket.model')
+const ProjectModel = require('../../model/project.model')
 module.exports = {
     Query: {
         async getTickets() {
@@ -96,14 +96,13 @@ module.exports = {
             try {
                 const ticket = await TicketModel.findById(ticketId)
                 if (!ticket) throw new Error('Ticket not found')
-                const comment = new TicketModel.Comment({
-                    body,
-                    userId,
+                ticket.comments.push({
+                    body: body,
+                    userId: userId,
                     createdAt: new Date().toISOString(),
                 })
-                ticket.comments.push(comment)
                 await ticket.save()
-                return comment
+                return ticket.comments[ticket.comments.length - 1]
             } catch (e) {
                 throw new Error('Error commenting ticket: ' + e)
             }
@@ -149,17 +148,13 @@ module.exports = {
             { ticketId, commentId }: { ticketId: string; commentId: string }
         ) {
             try {
-                const ticket = await TicketModel.findById(ticketId)
-                if (!ticket) throw new Error('Ticket not found')
-                const comment = ticket.comments.find(
-                    (comment) => comment._id === commentId
-                )
-                if (!comment) throw new Error('Comment not found')
-                ticket.comments = ticket.comments.filter(
-                    (comment) => comment._id !== commentId
-                )
-                await ticket.save()
-                return ticket
+                const ticket = await TicketModel.findByIdAndUpdate(ticketId, {
+                    $pull: {
+                        comments: { _id: commentId },
+                    },
+                })
+
+                return true
             } catch (e) {
                 throw new Error('Error deleting comment: ' + e)
             }

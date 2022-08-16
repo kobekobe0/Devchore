@@ -45,6 +45,7 @@ module.exports = gql`
         priority: String
         createdAt: String
         createdBy: ID
+        title: String
     }
 
     type Query {
