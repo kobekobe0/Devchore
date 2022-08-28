@@ -1,9 +1,23 @@
 import { useState } from 'react'
+import CreateModal from '../Modals/CreateModal'
 
 function Add() {
     const [show, setShow] = useState(false)
+    const [showModal, setShowModal] = useState(false)
+    const [modalType, setModalType] = useState('')
     const dropDown = () => {
         setShow(!show)
+    }
+
+    const modalShow = (modal) => {
+        setShow(false)
+        setModalType(modal)
+        setShowModal(true)
+    }
+
+    const closeModal = () => {
+        setModalType('')
+        setShowModal(false)
     }
     return (
         <div className="flex flex-col items-center">
@@ -23,7 +37,7 @@ function Add() {
                     className="py-1 text-sm text-black dark:text-gray-800"
                     aria-labelledby="dropdownDefault"
                 >
-                    <li>
+                    <li onClick={() => modalShow('project')}>
                         <a
                             href="#"
                             className="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
@@ -31,15 +45,15 @@ function Add() {
                             Project
                         </a>
                     </li>
-                    <li>
+                    <li onClick={() => modalShow('ticket')}>
                         <a
                             href="#"
                             className="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                         >
-                            Task
+                            Ticket
                         </a>
                     </li>
-                    <li>
+                    <li onClick={() => modalShow('member')}>
                         <a
                             href="#"
                             className="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
@@ -57,14 +71,13 @@ function Add() {
                     </li>
                 </ul>
             </div>
-            <div
-                style={{ backgroundColor: 'rgb(0,0,0,0.7)' }}
-                className="hidden flex items-center justify-center absolute m-auto top-0 left-0 bottom-0 h-screen w-screen bg-slate-200"
-            >
-                <div className="h-3/5 w-2/5 bg-slate-300 rounded-md -lg:w-8/12 -md:w-10/12">
-                    modal
-                </div>
-            </div>
+            {showModal && (
+                <CreateModal
+                    showModal={showModal}
+                    closeModal={closeModal}
+                    modalType={modalType}
+                />
+            )}
         </div>
     )
 }
