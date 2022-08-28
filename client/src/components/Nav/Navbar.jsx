@@ -1,4 +1,6 @@
 import p1 from '../../imgs/p1.jpg'
+import Tasks from './Tasks'
+import Add from './Add'
 function Navbar() {
     return (
         <div className="flex w-full h-full bg-stone-200 px-4 py-2 border-b border-gray-400 cursor-pointer items-center justify-between">
@@ -8,22 +10,9 @@ function Navbar() {
             </h1>
 
             <div className="ml-6 flex items-center justify-between w-full">
-                <h2 className="text-xs flex pointer-cursor hover:bg-slate-300 p-3 rounded-md font-semibold items-end">
-                    All tasks{' '}
-                    <svg
-                        className="w-4 h-4"
-                        aria-hidden="true"
-                        fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 320 512"
-                    >
-                        <path d="M310.6 246.6l-127.1 128C176.4 380.9 168.2 384 160 384s-16.38-3.125-22.63-9.375l-127.1-128C.2244 237.5-2.516 223.7 2.438 211.8S19.07 192 32 192h255.1c12.94 0 24.62 7.781 29.58 19.75S319.8 237.5 310.6 246.6z" />
-                    </svg>
-                </h2>
+                <Tasks />
                 <div className="flex items-center gap-6">
-                    <button className="bg-blue-600 text-white p-1 px-2 text-sm font-semibold rounded-md">
-                        Add +
-                    </button>
+                    <Add />
                     <button
                         id="dropdownNotificationButton"
                         data-dropdown-toggle="dropdownNotification"
