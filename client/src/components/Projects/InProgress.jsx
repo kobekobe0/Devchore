@@ -27,12 +27,13 @@ const tasks = [
 
 function InProgress() {
     return (
-        <div className="flex flex-col w-full items-center mt-4">
-            {tasks.map((task) => (
+        <div className="hideScroll flex flex-col w-full items-center mt-4">
+            {tasks?.map((task) => (
                 <div className="w-full flex flex-col items-center">
                     <TicketCard details={task} />
                 </div>
             ))}
+            <h2>+ Add new task</h2>
         </div>
     )
 }

@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md'
+import Finished from './Finished'
 import InProgress from './InProgress'
 import ToDo from './ToDo'
+import ToReview from './ToReview'
 
 function Project({ title, admin }) {
     const [show, setShow] = useState(false)
@@ -36,8 +38,8 @@ function Project({ title, admin }) {
             >
                 <ToDo />
                 <InProgress />
-                <ToDo />
-                <ToDo />
+                <ToReview />
+                <Finished />
             </div>
         </div>
     )
