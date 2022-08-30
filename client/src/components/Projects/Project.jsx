@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md'
+import InProgress from './InProgress'
+import ToDo from './ToDo'
 
 function Project({ title, admin }) {
     const [show, setShow] = useState(false)
@@ -28,8 +30,15 @@ function Project({ title, admin }) {
                 </div>
             </div>
             <div
-                className={`bg-gray-300 h-screen ${show ? 'flex' : 'hidden'}`}
-            ></div>
+                className={`bg-gray-300 h-screen ${
+                    show ? 'flex justify-around' : 'hidden'
+                }`}
+            >
+                <ToDo />
+                <InProgress />
+                <ToDo />
+                <ToDo />
+            </div>
         </div>
     )
 }
