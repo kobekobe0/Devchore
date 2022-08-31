@@ -59,7 +59,13 @@ module.exports = gql`
     }
 
     type Mutation {
-        createUser(name: String!, password: String!, position: String!): User
+        createUser(
+            name: String!
+            password: String!
+            confirmPassword: String!
+            position: String!
+        ): User
+        login(name: String!, password: String!): String
 
         createProject(userId: ID!, title: String!): Project!
         editProject(id: ID!, title: String): Project!
