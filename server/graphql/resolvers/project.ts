@@ -34,7 +34,7 @@ module.exports = {
         async createProject(_: null, { title }: { title: string }, context) {
             try {
                 const user = checkToken(context)
-                if (!user) throw new Error("You're not authorized")
+
                 const project = new ProjectModel({
                     createdBy: user._id,
                     title,
@@ -60,7 +60,6 @@ module.exports = {
         ) {
             try {
                 const user = checkToken(context)
-                if (!user) throw new Error("You're not authorized")
 
                 const project = await ProjectModel.findById(id)
 
@@ -86,13 +85,19 @@ module.exports = {
             context
         ) {
             try {
+                const user = checkToken(context)
+
                 const project = await ProjectModel.findById(projectId)
-                console.log(project)
+                const checkRole = checkProjectRole(project?.members, user._id)
+
+                if (checkRole == 2)
+                    throw new Error("You're not admin of this project")
                 if (
                     project.members.find((member) => member.userId === userId)
                 ) {
                     throw new Error('User is already a member of this project')
                 }
+
                 project.members.push({ userId, role })
                 await project.save()
                 return project
@@ -107,10 +112,16 @@ module.exports = {
             context
         ) {
             try {
-                //allow if you're a admin - make a helper function to check if user is admin
+                const user = checkToken(context)
+
                 const project = await ProjectModel.findById(projectId)
+
+                const role = checkProjectRole(project.members, user._id)
+                if (role == 2)
+                    throw new Error("You're not admin of this project")
+
                 const member = project.members.find(
-                    (member) => member.userId === userId
+                    (member) => member.userId == userId
                 )
                 if (!member) {
                     throw new Error('User is not a member of this project')
@@ -124,20 +135,17 @@ module.exports = {
                 throw new Error(e)
             }
         },
-        async joinProject(
-            _: null,
-            { userId, code }: { userId: string; code: string },
-            context
-        ) {
+        async joinProject(_: null, { code }: { code: string }, context) {
             try {
+                const user = checkToken(context)
                 const project = await ProjectModel.findOne({ code: code })
                 if (!project) throw new Error('Project not found')
                 if (
-                    project.members.find((member) => member.userId === userId)
+                    project.members.find((member) => member.userId === user._id)
                 ) {
                     throw new Error('User is already a member of this project')
                 }
-                project.members.push({ userId, role: 2 })
+                project.members.push({ userId: user._id, role: 2 })
                 await project.save()
                 return project
             } catch (e) {
@@ -147,19 +155,20 @@ module.exports = {
 
         async commentProject(
             _: null,
-            {
-                projectId,
-                body,
-                userId,
-            }: { projectId: string; body: string; userId: string },
+            { projectId, body }: { projectId: string; body: string },
             context
         ) {
             try {
+                const user = checkToken(context)
                 const project = await ProjectModel.findById(projectId)
-                console.log(body)
+
                 if (project) {
+                    const checkRole = checkProjectRole(
+                        project?.members,
+                        user._id
+                    )
                     project.comments.push({
-                        userId,
+                        userId: user._id,
                         body,
                         createdAt: new Date().toISOString(),
                     })
@@ -175,13 +184,13 @@ module.exports = {
 
         async deleteProject(
             _: null,
-            { projectId, userId }: { projectId: string; userId: string },
+            { projectId }: { projectId: string; userId: string },
             context
         ) {
-            //make a helper function to check if user owns something
             try {
+                const user = checkToken(context)
                 const project = await ProjectModel.findById(projectId)
-                if (project.createdBy === userId) {
+                if (project.createdBy === user._id) {
                     await project.remove()
                     return true
                 } else {
@@ -194,25 +203,22 @@ module.exports = {
 
         async deleteCommentProject(
             _: null,
-            {
-                projectId,
-                commentId,
-                userId,
-            }: { projectId: string; commentId: string; userId: string },
+            { projectId, commentId }: { projectId: string; commentId: string },
             context
         ) {
             try {
+                const user = checkToken(context)
                 const project = await ProjectModel.findById(projectId)
                 if (project) {
                     const comment = project.comments.find(
                         (comment) => comment.id === commentId
                     )
-                    if (comment.userId === userId) {
+                    if (comment.userId === user._id) {
                         project.comments = project.comments.filter(
                             (comment) => comment.id !== commentId
                         )
                         await project.save()
-                        return project.comments
+                        return project
                     } else {
                         throw new Error(
                             'You are not the creator of this comment'
