@@ -71,14 +71,10 @@ module.exports = gql`
         editProject(id: ID!, title: String): Project!
         addMember(projectId: ID!, userId: ID!, role: Int!): Project!
         removeMember(projectId: ID!, userId: ID!): Project!
-        joinProject(userId: ID!, code: String!): Project!
-        commentProject(projectId: ID!, body: String!, userId: ID!): Comment!
-        deleteCommentProject(
-            projectId: ID!
-            commentId: ID!
-            userId: ID!
-        ): Comment!
-        deleteProject(projectId: ID!, userId: ID!): Boolean!
+        joinProject(code: String!): Project!
+        commentProject(projectId: ID!, body: String!): Comment!
+        deleteCommentProject(projectId: ID!, commentId: ID!): Project!
+        deleteProject(projectId: ID!): Boolean!
 
         createTicket(
             projectId: ID!
