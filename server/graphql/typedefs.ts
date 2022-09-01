@@ -51,7 +51,7 @@ module.exports = gql`
     type Query {
         getUsers: [User]
         getUser(_id: ID!): User
-        getProjects: [Project]
+        getUserProjects: [Project]
         getProject(_id: ID!): Project
         getTickets: [Ticket]
         getTicket(_id: ID!): Ticket
@@ -67,7 +67,7 @@ module.exports = gql`
         ): User
         login(name: String!, password: String!): String
 
-        createProject(userId: ID!, title: String!): Project!
+        createProject(title: String!): Project!
         editProject(id: ID!, title: String): Project!
         addMember(projectId: ID!, userId: ID!, role: Int!): Project!
         removeMember(projectId: ID!, userId: ID!): Project!
