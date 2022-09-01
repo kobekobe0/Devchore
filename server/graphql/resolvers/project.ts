@@ -1,14 +1,23 @@
 const ProjectModel = require('../../model/project.model')
+const checkToken = require('../../utils/checkToken')
+const checkProjectRole = require('../../utils/checkProjectRole')
 
 interface Roles {
     userId: string
     role: number
+    _id: string
 }
+
 module.exports = {
     Query: {
-        async getProjects() {
+        async getUserProjects(_: null, __: null, context) {
+            const user = checkToken(context)
             try {
-                return await ProjectModel.find()
+                console.log(user._id)
+                // to fix can't query members array
+                return await ProjectModel.find({
+                    members: { $elemMatch: { userId: user._id } },
+                })
             } catch (e) {
                 throw new Error('Error getting projects: ' + e)
             }
@@ -22,14 +31,19 @@ module.exports = {
         },
     },
     Mutation: {
-        async createProject(
-            _: null,
-            { userId, title }: { userId: string; title: string }
-        ) {
+        async createProject(_: null, { title }: { title: string }, context) {
             try {
+                const user = checkToken(context)
+                if (!user) throw new Error("You're not authorized")
                 const project = new ProjectModel({
-                    createdBy: userId,
+                    createdBy: user._id,
                     title,
+                    members: [
+                        {
+                            userId: user._id,
+                            role: 1, //ADMIN
+                        },
+                    ],
                     createdAt: new Date().toISOString(),
                 })
                 await project.save()
@@ -41,10 +55,19 @@ module.exports = {
 
         async editProject(
             _: null,
-            { id, title }: { id: string; title: string }
+            { id, title }: { id: string; title: string },
+            context
         ) {
             try {
+                const user = checkToken(context)
+                if (!user) throw new Error("You're not authorized")
+
                 const project = await ProjectModel.findById(id)
+
+                const role = checkProjectRole(project?.members, user._id)
+                if (role == 2)
+                    throw new Error("You're not admin of this project")
+
                 project.title = title
                 await project.save()
                 return project
@@ -59,7 +82,8 @@ module.exports = {
                 projectId,
                 userId,
                 role,
-            }: { projectId: string; userId: string; role: string }
+            }: { projectId: string; userId: string; role: string },
+            context
         ) {
             try {
                 const project = await ProjectModel.findById(projectId)
@@ -79,7 +103,8 @@ module.exports = {
 
         async removeMember(
             _: null,
-            { projectId, userId }: { projectId: string; userId: string }
+            { projectId, userId }: { projectId: string; userId: string },
+            context
         ) {
             try {
                 //allow if you're a admin - make a helper function to check if user is admin
@@ -101,7 +126,8 @@ module.exports = {
         },
         async joinProject(
             _: null,
-            { userId, code }: { userId: string; code: string }
+            { userId, code }: { userId: string; code: string },
+            context
         ) {
             try {
                 const project = await ProjectModel.findOne({ code: code })
@@ -125,7 +151,8 @@ module.exports = {
                 projectId,
                 body,
                 userId,
-            }: { projectId: string; body: string; userId: string }
+            }: { projectId: string; body: string; userId: string },
+            context
         ) {
             try {
                 const project = await ProjectModel.findById(projectId)
@@ -148,7 +175,8 @@ module.exports = {
 
         async deleteProject(
             _: null,
-            { projectId, userId }: { projectId: string; userId: string }
+            { projectId, userId }: { projectId: string; userId: string },
+            context
         ) {
             //make a helper function to check if user owns something
             try {
@@ -170,7 +198,8 @@ module.exports = {
                 projectId,
                 commentId,
                 userId,
-            }: { projectId: string; commentId: string; userId: string }
+            }: { projectId: string; commentId: string; userId: string },
+            context
         ) {
             try {
                 const project = await ProjectModel.findById(projectId)
