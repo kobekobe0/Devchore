@@ -67,7 +67,6 @@ module.exports = {
                 const match = await bcrypt.compare(password, user.password)
                 if (!match) throw new Error("Credentials didn't match")
                 if (match) {
-                    console.log('ff')
                     const token = jwt.sign(
                         {
                             _id: user._id,
@@ -75,8 +74,6 @@ module.exports = {
                         },
                         secretKey
                     )
-                    console.log('gg')
-                    console.log(token)
                     return token
                 }
             } catch (e) {

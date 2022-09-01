@@ -46,7 +46,8 @@ module.exports = {
                 status: string
                 priority: string
                 description: string
-            }
+            },
+            context
         ) {
             try {
                 const project = ProjectModel.findById(projectId)
@@ -72,7 +73,8 @@ module.exports = {
                 ticketId,
                 description,
                 title,
-            }: { ticketId: string; description: string; title: string }
+            }: { ticketId: string; description: string; title: string },
+            context
         ) {
             try {
                 const ticket = await TicketModel.findById(ticketId)
@@ -91,7 +93,8 @@ module.exports = {
                 ticketId,
                 body,
                 userId,
-            }: { ticketId: string; body: string; userId: string }
+            }: { ticketId: string; body: string; userId: string },
+            context
         ) {
             try {
                 const ticket = await TicketModel.findById(ticketId)
@@ -113,7 +116,8 @@ module.exports = {
                 ticketId,
                 assigner,
                 assignee,
-            }: { ticketId: string; assigner: string; assignee: string }
+            }: { ticketId: string; assigner: string; assignee: string },
+            context
         ) {
             try {
                 //check if user is in project
@@ -145,7 +149,8 @@ module.exports = {
 
         async deleteCommentTicket(
             _: null,
-            { ticketId, commentId }: { ticketId: string; commentId: string }
+            { ticketId, commentId }: { ticketId: string; commentId: string },
+            context
         ) {
             try {
                 const ticket = await TicketModel.findByIdAndUpdate(ticketId, {
@@ -162,7 +167,8 @@ module.exports = {
 
         async deleteTicket(
             _: null,
-            { ticketId, userId }: { ticketId: string; userId: string }
+            { ticketId, userId }: { ticketId: string; userId: string },
+            context
         ) {
             //make a helper function to check if user owns something
             try {
@@ -179,7 +185,8 @@ module.exports = {
 
         async ownTicket(
             _: null,
-            { ticketId, userId }: { ticketId: string; userId: string }
+            { ticketId, userId }: { ticketId: string; userId: string },
+            context
         ) {
             try {
                 const ticket = await TicketModel.findById(ticketId)
@@ -202,7 +209,8 @@ module.exports = {
 
         async dropTicket(
             _: null,
-            { ticketId, userId }: { ticketId: string; userId: string }
+            { ticketId, userId }: { ticketId: string; userId: string },
+            context
         ) {
             //check if user is handler of the ticket
             try {
