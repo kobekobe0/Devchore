@@ -46,6 +46,7 @@ module.exports = gql`
         createdAt: String
         createdBy: ID
         title: String
+        deleted: Boolean
     }
 
     type Query {
@@ -53,9 +54,12 @@ module.exports = gql`
         getUser(_id: ID!): User
         getUserProjects: [Project]
         getProject(_id: ID!): Project
+        getProjectMembers(projectId: ID!): [Roles]
         getTickets: [Ticket]
         getTicket(_id: ID!): Ticket
         getTicketsByProject(projectId: ID!): [Ticket]
+        getUserTickets: [Ticket]
+        getUserTicket(ticketId: String!): Ticket
     }
 
     type Mutation {
@@ -79,18 +83,18 @@ module.exports = gql`
         createTicket(
             projectId: ID!
             title: String!
-            userId: ID!
             status: String!
+            handlers: [String!]
             priority: String!
             description: String!
         ): Ticket!
-        editTicket(ticketId: ID!, description: String!, title: String!): Ticket!
-        deleteTicket(ticketId: ID!, userId: ID!): Boolean!
-        commentTicket(ticketId: ID!, body: String!, userId: String!): Comment!
+        editTicket(ticketId: ID!, description: String, title: String): Ticket!
+        deleteTicket(ticketId: ID!): Boolean!
+        commentTicket(ticketId: ID!, body: String!): Comment!
         deleteCommentTicket(ticketId: ID!, commentId: ID!): Boolean!
-        assignTicket(ticketId: ID!, assigner: ID!, assignee: ID!): Ticket!
-        ownTicket(ticketId: ID!, userId: ID!): Ticket!
-        dropTicket(ticketId: ID!, userId: ID!): Ticket!
+        assignTicket(ticketId: ID!, assignee: ID!): Ticket!
+        ownTicket(ticketId: ID!): Ticket!
+        dropTicket(ticketId: ID!): Ticket!
     }
 `
 
