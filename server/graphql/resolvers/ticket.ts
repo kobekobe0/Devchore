@@ -1,11 +1,13 @@
 export {}
 const TicketModel = require('../../model/ticket.model')
 const ProjectModel = require('../../model/project.model')
+const checkToken = require('../../utils/checkToken')
+const checkProjectRole = require('../../utils/checkProjectRole')
 module.exports = {
     Query: {
         async getTickets() {
             try {
-                return await TicketModel.find()
+                return await TicketModel.find({ deleted: false })
             } catch (e) {
                 throw new Error('Error getting tickets: ' + e)
             }
@@ -17,12 +19,41 @@ module.exports = {
                 throw new Error('Error getting ticket: ' + e)
             }
         },
-        async getTicketsByProject(
+        async getUserTickets(_: null, __: null, context) {
+            try {
+                const user = checkToken(context)
+                return await TicketModel.find({
+                    deleted: false,
+                    handlers: { $elemMatch: { handlers: user._id } },
+                })
+            } catch (e) {
+                throw new Error("Failed fetching user's tickets")
+            }
+        },
+        async getUserTicket(
             _: null,
-            { projectId }: { projectId: string }
+            { ticketId }: { ticketId: string },
+            context
         ) {
             try {
-                return await TicketModel.find({ projectId })
+                const user = checkToken(context)
+                const ticket = await TicketModel.findOne({
+                    _id: ticketId,
+                    deleted: false,
+                })
+                if (ticket.handlers!.includes(user._id))
+                    throw new Error("You're not the owner of this ticket")
+                return ticket
+            } catch (e) {}
+        },
+        async getTicketsByProject(
+            _: null,
+            { projectId }: { projectId: string },
+            context
+        ) {
+            try {
+                checkToken(context)
+                return await TicketModel.find({ projectId, deleted: false })
             } catch (e) {
                 throw new Error('Error getting tickets: ' + e)
             }
@@ -35,34 +66,53 @@ module.exports = {
             {
                 projectId,
                 title,
-                userId,
                 status,
                 priority,
+                handlers,
                 description,
             }: {
                 projectId: string
                 title: string
-                userId: string
                 status: string
+                handlers: string[]
                 priority: string
                 description: string
             },
             context
         ) {
             try {
-                const project = ProjectModel.findById(projectId)
+                const user = checkToken(context)
+                const project = await ProjectModel.findById(projectId)
+                const role = checkProjectRole(project?.members, user._id)
                 if (!project) throw new Error('Project not found')
-                const ticket = new TicketModel({
-                    projectId,
-                    title,
-                    createdBy: userId,
-                    status,
-                    priority,
-                    description,
-                    createdAt: new Date().toISOString(),
-                })
-                await ticket.save()
-                return ticket
+                if (role == 1) {
+                    //pwede mag assign
+                    const ticket = new TicketModel({
+                        projectId,
+                        title,
+                        createdBy: user._id,
+                        status: status.toUpperCase(),
+                        priority: priority.toUpperCase(),
+                        description,
+                        handlers: handlers,
+                        createdAt: new Date().toISOString(),
+                    })
+                    await ticket.save()
+                    return ticket
+                } else {
+                    const ticket = new TicketModel({
+                        projectId,
+                        title,
+                        createdBy: user._id,
+                        status,
+                        priority,
+                        description,
+                        handlers: [user._id],
+                        createdAt: new Date().toISOString(),
+                    })
+                    await ticket.save()
+                    return ticket
+                }
             } catch (e) {
                 throw new Error('Error creating ticket: ' + e)
             }
@@ -77,10 +127,19 @@ module.exports = {
             context
         ) {
             try {
+                const user = checkToken(context)
                 const ticket = await TicketModel.findById(ticketId)
+                const project = await ProjectModel.findById(ticket.projectId)
+                const role = checkProjectRole(project?.members, user._id)
+
+                if (role !== 1)
+                    throw new Error(
+                        "You're not an authorized to update this ticket"
+                    )
                 if (!ticket) throw new Error('Ticket not found')
-                if (description) ticket.description = description
-                if (title) ticket.title = title
+                if (description) ticket.description = description //if desc is not sent, don't update
+                if (title) ticket.title = title //if title is not sent, don't update
+
                 await ticket.save()
                 return ticket
             } catch (e) {
@@ -89,19 +148,19 @@ module.exports = {
         },
         async commentTicket(
             _: null,
-            {
-                ticketId,
-                body,
-                userId,
-            }: { ticketId: string; body: string; userId: string },
+            { ticketId, body }: { ticketId: string; body: string },
             context
         ) {
             try {
+                const user = checkToken(context)
                 const ticket = await TicketModel.findById(ticketId)
+                const project = await ProjectModel.findById(ticket.projectId)
+                checkProjectRole(project?.members, user._id) //checks if user is member
+
                 if (!ticket) throw new Error('Ticket not found')
                 ticket.comments.push({
                     body: body,
-                    userId: userId,
+                    userId: user._id,
                     createdAt: new Date().toISOString(),
                 })
                 await ticket.save()
@@ -112,32 +171,22 @@ module.exports = {
         },
         async assignTicket(
             _: null,
-            {
-                ticketId,
-                assigner,
-                assignee,
-            }: { ticketId: string; assigner: string; assignee: string },
+            { ticketId, assignee }: { ticketId: string; assignee: string },
             context
         ) {
             try {
-                //check if user is in project
-                //check if assigner is an admin
+                //check if assignee is member of the project
+                const user = checkToken(context)
+
                 const ticket = await TicketModel.findById(ticketId)
                 if (!ticket) throw new Error('Ticket not found')
 
                 const project = await ProjectModel.findById(ticket.projectId)
                 if (!project) throw new Error('Project not found')
-                if (
-                    !project.members.find(
-                        (member) => member.userId === assignee
-                    )
-                )
-                    throw new Error('User not in project')
 
-                const role = project.members.find(
-                    (member) => member.userId === assigner
-                ).role
-                if (role !== 1) throw new Error('User not an admin')
+                const role = checkProjectRole(project?.members, user._id)
+                if (role !== 1)
+                    throw new Error("You're not authorized to assign handlers")
 
                 ticket.handlers.push(assignee)
                 await ticket.save()
@@ -153,11 +202,33 @@ module.exports = {
             context
         ) {
             try {
-                const ticket = await TicketModel.findByIdAndUpdate(ticketId, {
-                    $pull: {
-                        comments: { _id: commentId },
-                    },
-                })
+                const user = checkToken(context)
+
+                const ticket = await TicketModel.findById(ticketId)
+                const project = await ProjectModel.findById(ticket.projectId)
+                const role = checkProjectRole(project?.members, user._id)
+
+                if (role == 1) {
+                    await TicketModel.findByIdAndUpdate(ticketId, {
+                        $pull: {
+                            comments: { _id: commentId },
+                        },
+                    })
+                } else {
+                    const comment = ticket.comments.find(
+                        (comment) => comment._id == commentId
+                    )
+
+                    if (!comment) throw new Error("Can't find comment")
+                    if (comment.userId !== user._id)
+                        throw new Error("You're not the owner of this comment")
+
+                    await TicketModel.findByIdAndUpdate(ticketId, {
+                        $pull: {
+                            comments: { _id: commentId },
+                        },
+                    })
+                }
 
                 return true
             } catch (e) {
@@ -167,38 +238,44 @@ module.exports = {
 
         async deleteTicket(
             _: null,
-            { ticketId, userId }: { ticketId: string; userId: string },
+            { ticketId }: { ticketId: string },
             context
         ) {
             //make a helper function to check if user owns something
             try {
+                const user = checkToken(context)
                 const ticket = await TicketModel.findById(ticketId)
                 if (!ticket) throw new Error('Ticket not found')
-                if (ticket.createdBy !== userId)
+                const project = await ProjectModel.findById(ticket.projectId)
+                const role = checkProjectRole(project?.members, user._id)
+                if (ticket.createdBy !== user._id) {
+                    if (role !== 1) throw new Error('User is not authorized')
                     throw new Error('User is not authorized')
-                await ticket.remove()
+                }
+
+                ticket.deleted = true
+                await ticket.save()
                 return true
             } catch (e) {
                 throw new Error('Error deleting ticket: ' + e)
             }
         },
 
-        async ownTicket(
-            _: null,
-            { ticketId, userId }: { ticketId: string; userId: string },
-            context
-        ) {
+        async ownTicket(_: null, { ticketId }: { ticketId: string }, context) {
             try {
+                const user = checkToken(context)
                 const ticket = await TicketModel.findById(ticketId)
+
                 if (!ticket) throw new Error('Ticket not found')
 
                 const project = await ProjectModel.findById(ticket.projectId)
-                if (!project.members.find((member) => member.userId === userId))
-                    throw new Error('User not in project')
 
-                if (!ticket.handlers.find((handler) => handler === userId))
+                checkProjectRole(project.members, user._id) //checks if member
+
+                if (ticket.handlers.find((handler) => handler === user._id))
                     throw new Error('User already handling the ticket')
-                ticket.handlers.push(userId)
+
+                ticket.handlers.push(user._id)
                 await ticket.save()
 
                 return ticket
@@ -207,19 +284,17 @@ module.exports = {
             }
         },
 
-        async dropTicket(
-            _: null,
-            { ticketId, userId }: { ticketId: string; userId: string },
-            context
-        ) {
+        async dropTicket(_: null, { ticketId }: { ticketId: string }, context) {
             //check if user is handler of the ticket
             try {
+                const user = checkToken(context)
                 const ticket = await TicketModel.findById(ticketId)
+
                 if (!ticket) throw new Error('Ticket not found')
-                if (!ticket.handlers.find((handler) => handler === userId))
+                if (!ticket.handlers.find((handler) => handler === user._id))
                     throw new Error('User not handling the ticket')
                 ticket.handlers = ticket.handlers.filter(
-                    (handler) => handler !== userId
+                    (handler) => handler !== user._id
                 )
                 await ticket.save()
                 return ticket
