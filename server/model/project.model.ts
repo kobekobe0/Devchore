@@ -18,7 +18,6 @@ const Project = new Schema({
     createdBy: { type: String, required: true },
     title: { type: String, required: true },
     members: { type: [{ userId: String, role: Number }], required: true },
-    ticketIds: { type: [String], default: [] },
     comments: {
         type: [{ userId: String, body: String, createdAt: String }],
         default: [],
