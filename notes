@@ -3,4 +3,6 @@
 1 = admin
 2 = member
 
+when creating a ticket, if you're an admin you can assign handlers, if not the ticket is automatically in your handling
+
 add hashed password at jwt auth header then make helper function if the credentials are correct
