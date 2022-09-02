@@ -29,6 +29,17 @@ module.exports = {
                 throw new Error('Error getting project: ' + e)
             }
         },
+        async getProjectMembers(
+            _: null,
+            { projectId }: { projectId: string },
+            context
+        ) {
+            try {
+                checkToken(context)
+                const project = await ProjectModel.findById(projectId)
+                return project?.members
+            } catch (e) {}
+        },
     },
     Mutation: {
         async createProject(_: null, { title }: { title: string }, context) {
