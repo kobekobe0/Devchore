@@ -6,7 +6,10 @@ function Finished() {
     return (
         <div className="hideScroll flex flex-col w-full items-center mt-4">
             {tasks?.map((task) => (
-                <div className="w-full flex flex-col items-center">
+                <div
+                    key={task._id}
+                    className="w-full flex flex-col items-center"
+                >
                     <TicketCard details={task} />
                 </div>
             ))}

@@ -11,6 +11,7 @@ const tasks = [
         status: 'TODO',
         priority: 'MID',
         createdAt: 'May 17, 2022',
+        _id: 'adaszqwea',
     },
 ]
 
@@ -18,7 +19,10 @@ function ToReview() {
     return (
         <div className="hideScroll flex flex-col w-full items-center mt-4">
             {tasks?.map((task) => (
-                <div className="w-full flex flex-col items-center">
+                <div
+                    key={task._id}
+                    className="w-full flex flex-col items-center"
+                >
                     <TicketCard details={task} />
                 </div>
             ))}
