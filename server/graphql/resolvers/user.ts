@@ -32,8 +32,22 @@ module.exports = {
             }
         ) {
             try {
+                if (name.trim() == '') throw new Error('Name is required!')
                 const exists = await UserModel.findOne({ name: name })
                 if (exists) throw new Error('Someone already uses this name')
+
+                if (password.trim() == '')
+                    throw new Error('Password is required!')
+                if (name.length < 3 || name.length > 15)
+                    throw new Error('Name must be 4 to 15 letters long')
+                if (password.length < 4)
+                    throw new Error(
+                        'Password must contain 5 or more characters'
+                    )
+                if (password !== confirmPassword)
+                    throw new Error("Passwords didn't match")
+                if (position.trim() == '')
+                    throw new Error('Position is required!')
 
                 if (password != confirmPassword)
                     throw new Error('Password did not match')
