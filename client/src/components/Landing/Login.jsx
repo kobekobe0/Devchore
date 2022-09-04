@@ -1,7 +1,50 @@
 import { BiCodeAlt } from 'react-icons/bi'
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { gql, useMutation } from '@apollo/client'
+
+const LOGIN_USER = gql`
+    mutation Login($name: String!, $password: String!) {
+        login(name: $name, password: $password)
+    }
+`
 
 function Login() {
+    const navigate = useNavigate()
+    const [name, setName] = useState('')
+    const [password, setPassword] = useState('')
+    const [loginUser, { data, loading, error }] = useMutation(LOGIN_USER)
+
+    const formChange = (e) => {
+        const { name, value } = e.target
+        if (name === 'name') {
+            setName(value)
+        } else if (name === 'password') {
+            setPassword(value)
+        }
+    }
+
+    const onLogin = async (e) => {
+        e.preventDefault()
+
+        const token = await loginUser({
+            variables: {
+                name,
+                password,
+            },
+        })
+
+        localStorage.setItem('token', token.data.login)
+        navigate('/')
+    }
+
+    window.addEventListener('storage', () => {
+        const token = localStorage.getItem('token')
+        if (!token) console.log('token delted')
+    })
+
+    if (error) console.log(error.message)
     return (
         <div className="flex w-screen h-screen ">
             <section className="h-full w-full gradient-form bg-gray-300 md:h-screen">
@@ -23,23 +66,34 @@ function Login() {
                                                 </h4>
                                             </div>
                                             <form>
-                                                <p className="mb-4">
-                                                    Please login to your account
-                                                </p>
+                                                {error ? (
+                                                    <p className="mb-4 text-red-600">
+                                                        {error.message}
+                                                    </p>
+                                                ) : (
+                                                    <p className="mb-4">
+                                                        Please login to your
+                                                        account
+                                                    </p>
+                                                )}
                                                 <div className="mb-4">
                                                     <input
                                                         type="text"
+                                                        name="name"
                                                         className="form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                                                         id="exampleFormControlInput1"
                                                         placeholder="Username"
+                                                        onChange={formChange}
                                                     />
                                                 </div>
                                                 <div className="mb-4">
                                                     <input
                                                         type="password"
+                                                        name="password"
                                                         className="form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                                                         id="exampleFormControlInput1"
                                                         placeholder="Password"
+                                                        onChange={formChange}
                                                     />
                                                 </div>
                                                 <div className="text-center pt-1 mb-12 pb-1">
@@ -48,8 +102,11 @@ function Login() {
                                                         type="button"
                                                         data-mdb-ripple="true"
                                                         data-mdb-ripple-color="light"
+                                                        onClick={onLogin}
                                                     >
-                                                        Log in
+                                                        {loading
+                                                            ? 'Loading...'
+                                                            : 'Login'}
                                                     </button>
                                                     <a
                                                         className="text-gray-500"
