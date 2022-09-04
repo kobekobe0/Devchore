@@ -7,7 +7,7 @@ function ProgressBar() {
     return (
         <div className="flex w-full bg-white py-3 my-2 justify-around  border-gray-400">
             {buttons.map((button) => (
-                <ProgressButton button={button} />
+                <ProgressButton key={button} button={button} />
             ))}
         </div>
     )
