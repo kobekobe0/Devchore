@@ -1,7 +1,64 @@
 import { BiCodeAlt } from 'react-icons/bi'
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { gql, useMutation } from '@apollo/client'
+
+const REGISTER_USER = gql`
+    mutation CreateUser(
+        $name: String!
+        $password: String!
+        $confirmPassword: String!
+        $position: String!
+    ) {
+        createUser(
+            name: $name
+            password: $password
+            confirmPassword: $confirmPassword
+            position: $position
+        ) {
+            name
+        }
+    }
+`
 
 function Register() {
+    const navigate = useNavigate()
+    const [name, setName] = useState('')
+    const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [position, setPosition] = useState('')
+    const [registerUser, { data, loading, error }] = useMutation(REGISTER_USER)
+
+    const formChange = (e) => {
+        const { name, value } = e.target
+        if (name === 'name') {
+            setName(value)
+        } else if (name === 'password') {
+            setPassword(value)
+        } else if (name == 'confirmPassword') {
+            setConfirmPassword(value)
+        } else if (name == 'position') {
+            setPosition(value)
+        }
+    }
+
+    const onRegister = async (e) => {
+        e.preventDefault()
+
+        await registerUser({
+            variables: {
+                name,
+                password,
+                confirmPassword,
+                position,
+            },
+        })
+
+        //navigate to verify email
+        navigate('/login')
+    }
+
     return (
         <div className="flex w-screen h-screen ">
             <section className="h-full w-full gradient-form bg-gray-300 md:h-screen">
@@ -23,15 +80,23 @@ function Register() {
                                                 </h4>
                                             </div>
                                             <form>
-                                                <p className="mb-4">
-                                                    Create an account
-                                                </p>
+                                                {error ? (
+                                                    <p className="mb-4 text-red-600">
+                                                        {error.message}
+                                                    </p>
+                                                ) : (
+                                                    <p className="mb-4">
+                                                        Create an account
+                                                    </p>
+                                                )}
                                                 <div className="mb-4">
                                                     <input
                                                         type="text"
                                                         className="form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                                                         id="exampleFormControlInput1"
                                                         placeholder="Username"
+                                                        name="name"
+                                                        onChange={formChange}
                                                     />
                                                 </div>
                                                 <div className="mb-4">
@@ -40,6 +105,8 @@ function Register() {
                                                         className="form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                                                         id="exampleFormControlInput1"
                                                         placeholder="Password"
+                                                        name="password"
+                                                        onChange={formChange}
                                                     />
                                                 </div>
                                                 <div className="mb-4">
@@ -48,6 +115,18 @@ function Register() {
                                                         className="form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                                                         id="exampleFormControlInput1"
                                                         placeholder="Confirm password"
+                                                        name="confirmPassword"
+                                                        onChange={formChange}
+                                                    />
+                                                </div>
+                                                <div className="mb-4">
+                                                    <input
+                                                        type="text"
+                                                        className="form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
+                                                        id="exampleFormControlInput1"
+                                                        placeholder="Position"
+                                                        name="position"
+                                                        onChange={formChange}
                                                     />
                                                 </div>
                                                 <div className="text-center pt-1 mb-12 pb-1">
@@ -56,15 +135,10 @@ function Register() {
                                                         type="button"
                                                         data-mdb-ripple="true"
                                                         data-mdb-ripple-color="light"
+                                                        onClick={onRegister}
                                                     >
                                                         Register
                                                     </button>
-                                                    <a
-                                                        className="text-gray-500"
-                                                        href="#!"
-                                                    >
-                                                        Forgot password?
-                                                    </a>
                                                 </div>
                                                 <div className="flex items-center justify-between pb-6">
                                                     <Link to="/login">
