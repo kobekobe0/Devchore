@@ -39,7 +39,7 @@ module.exports = {
                 if (password.trim() == '')
                     throw new Error('Password is required!')
                 if (name.length < 3 || name.length > 15)
-                    throw new Error('Name must be 4 to 15 letters long')
+                    throw new Error('Name must be 4 to 15 characters long')
                 if (password.length < 4)
                     throw new Error(
                         'Password must contain 5 or more characters'
